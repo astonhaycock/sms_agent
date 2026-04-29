@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Off-Grid AI Agent - SMS Assistant for Remote Areas</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue@3.5.28/dist/vue.global.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mdi/font@7.4.47/css/materialdesignicons.min.css">
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .gradient-bg {
+                background: linear-gradient(135deg, #2d5016 0%, #1a472a 100%);
+            }
+            .message-bubble {
+                animation: slideIn 0.4s ease-out;
+            }
+            @keyframes slideIn {
+                from {
+                    opacity: 0;
+                    transform: translateY(15px) scale(0.95);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateY(0) scale(1);
+                }
+            }
+            button:hover {
+                transform: translateY(-2px);
+            }
+            button:active {
+                transform: translateY(0);
+            }
+            @keyframes fade-in {
+                from {
+                    opacity: 0;
+                    transform: translateY(20px);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+            .animate-fade-in {
+                animation: fade-in 0.6s ease-out;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 scroll-smooth">
+
+    <div id="app">
+
+    <!-- Hero Section -->
+    <div class="text-white relative overflow-hidden min-h-screen">
+        <!-- Video Background -->
+        <video
+            autoplay
+            loop
+            muted
+            playsinline
+            class="absolute inset-0 w-full h-full object-cover">
+            <source src="static/fleet_today_30sec_small.mp4" type="video/mp4">
+            Your browser does not support the video tag.
+        </video>
+
+        <!-- Dark overlay for text readability -->
+        <div class="absolute inset-0 bg-gradient-to-br from-green-950/60 via-emerald-950/65 to-green-900/60"></div>
+
+        <!-- Content -->
+        <nav class="container mx-auto px-4 sm:px-6 py-4 relative z-10">
+            <div class="flex justify-between items-center">
+                <h1 class="text-xl sm:text-2xl font-bold flex items-center gap-2">
+                    <i class="mdi mdi-satellite-variant text-2xl sm:text-3xl"></i>
+                    <span class="hidden sm:inline">Off-Grid AI Agent</span>
+                    <span class="sm:hidden">Off-Grid AI</span>
+                </h1>
+                <a href="login.html" class="text-sm sm:text-base hover:text-green-200 transition flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-lg hover:bg-white/20">
+                    <i class="mdi mdi-login"></i>
+                    <span>Login</span>
+                </a>
+            </div>
+        </nav>
+
+        <div class="container mx-auto px-4 sm:px-6 py-12 sm:py-16 lg:py-24 relative z-10 flex items-center min-h-[calc(100vh-80px)]">
+            <div class="w-full max-w-5xl mx-auto text-center">
+                <!-- Badge -->
+                <div class="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full mb-6 border border-white/30">
+                    <i class="mdi mdi-check-circle text-green-300"></i>
+                    <span class="text-sm font-medium">SMS-Only • No Internet Required</span>
+                </div>
+
+                <h2 class="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold mb-6 leading-tight">
+                    Your AI Assistant<br/>
+                    <span class="text-transparent bg-clip-text bg-gradient-to-r from-emerald-300 to-lime-200">
+                        Where Data Doesn't Reach
+                    </span>
+                </h2>
+
+                <p class="text-lg sm:text-xl lg:text-2xl mb-4 max-w-3xl mx-auto text-green-100">
+                    Get instant answers to urgent questions via SMS—even when you're completely off the grid.
+                    Just text, no apps required.
+                </p>
+
+                <h3 class="text-2xl sm:text-3xl lg:text-4xl font-bold mb-4 text-white/90">Built With Real Local Hardware</h3>
+                <p class="text-base sm:text-lg text-emerald-100 mb-8 max-w-2xl mx-auto">
+                    Powered by homelab server for fast, local-first AI processing
+                </p>
+
+                <p class="text-sm sm:text-base text-green-200 mb-8 flex items-center justify-center gap-2">
+                    <i class="mdi mdi-cellphone text-lg"></i>
+                    <span>Requires iPhone 14 or newer for satellite SMS</span>
+                </p>
+
+                <!-- CTA Button -->
+                <div class="mb-12 flex justify-center">
+                    <a href="#demo-section"
+                        class="bg-white text-green-800 px-8 sm:px-12 py-3.5 sm:py-4 rounded-xl font-semibold text-base sm:text-lg hover:bg-green-50 hover:shadow-2xl transition-all duration-300 shadow-xl transform hover:-translate-y-1 inline-flex items-center gap-2 border-2 border-green-200"
+                        @click="showDemos = true; currentDemo = 0">
+                        <i class="mdi mdi-play-circle-outline text-xl"></i>
+                        <span>See Demo</span>
+                    </a>
+                </div>
+
+                <!-- Stats -->
+                <div class="grid grid-cols-3 gap-6 max-w-2xl mx-auto">
+                    <div class="bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl p-4">
+                        <div class="text-3xl sm:text-4xl font-bold">4</div>
+                        <div class="text-xs sm:text-sm text-green-200 mt-1">Core Tools</div>
+                    </div>
+                    <div class="bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl p-4">
+                        <div class="text-3xl sm:text-4xl font-bold">&lt;120s</div>
+                        <div class="text-xs sm:text-sm text-green-200 mt-1">Response Time</div>
+                    </div>
+                    <div class="bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl p-4">
+                        <div class="text-3xl sm:text-4xl font-bold">24/7</div>
+                        <div class="text-xs sm:text-sm text-green-200 mt-1">Available</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Demo Section -->
+    <div id="demo-section" class="bg-white py-12 border-b-4 border-green-200 transition-all duration-500" v-show="showDemos">
+        <div class="container mx-auto px-6">
+            <h3 class="text-3xl font-bold text-center mb-3 text-gray-800 animate-fade-in">Example Conversations</h3>
+            <p class="text-center text-gray-600 mb-8 flex items-center justify-center gap-2 animate-fade-in">
+                <i class="mdi mdi-cursor-default-click text-green-700"></i>
+                Click to explore different use cases
+            </p>
+
+            <!-- Demo Selector -->
+            <div class="flex gap-3 justify-center mb-8 flex-wrap">
+                <button
+                    class="px-5 py-3 rounded-xl transition-all duration-300 flex items-center justify-center gap-2 w-44 font-semibold text-sm shadow-md hover:shadow-xl hover:-translate-y-1 cursor-pointer border-2"
+                    :class="currentDemo === 0 ? 'bg-green-700 text-white border-green-700' : 'bg-white text-gray-700 border-gray-200 hover:border-green-300'"
+                    @click="currentDemo = 0">
+                    <i class="mdi mdi-weather-partly-cloudy text-lg"></i> Weather
+                </button>
+                <button
+                    class="px-5 py-3 rounded-xl transition-all duration-300 flex items-center justify-center gap-2 w-44 font-semibold text-sm shadow-md hover:shadow-xl hover:-translate-y-1 cursor-pointer border-2"
+                    :class="currentDemo === 1 ? 'bg-green-700 text-white border-green-700' : 'bg-white text-gray-700 border-gray-200 hover:border-green-300'"
+                    @click="currentDemo = 1">
+                    <i class="mdi mdi-medical-bag text-lg"></i> First Aid
+                </button>
+                <button
+                    class="px-5 py-3 rounded-xl transition-all duration-300 flex items-center justify-center gap-2 w-44 font-semibold text-sm shadow-md hover:shadow-xl hover:-translate-y-1 cursor-pointer border-2"
+                    :class="currentDemo === 2 ? 'bg-green-700 text-white border-green-700' : 'bg-white text-gray-700 border-gray-200 hover:border-green-300'"
+                    @click="currentDemo = 2">
+                    <i class="mdi mdi-magnify text-lg"></i> Web Search
+                </button>
+                <button
+                    class="px-5 py-3 rounded-xl transition-all duration-300 flex items-center justify-center gap-2 w-44 font-semibold text-sm shadow-md hover:shadow-xl hover:-translate-y-1 cursor-pointer border-2"
+                    :class="currentDemo === 3 ? 'bg-green-700 text-white border-green-700' : 'bg-white text-gray-700 border-gray-200 hover:border-green-300'"
+                    @click="currentDemo = 3">
+                    <i class="mdi mdi-tent text-lg"></i> General Q&A
+                </button>
+            </div>
+
+            <!-- Demo Messages -->
+            <div class="max-w-2xl mx-auto bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-8 shadow-xl border border-gray-200" style="min-height: 320px;">
+
+                <!-- Weather Demo -->
+                <div v-show="currentDemo === 0">
+                    <div class="flex justify-end mb-4">
+                        <div class="bg-gradient-to-br from-green-700 to-green-800 text-white rounded-2xl py-3 px-5 w-full max-w-lg message-bubble shadow-lg">
+                            <p class="text-sm opacity-70 mb-1">You</p>
+                            Weather for 37.11,-113.56 tomorrow?
+                        </div>
+                    </div>
+                    <div class="flex justify-start mb-4">
+                        <div class="bg-white rounded-2xl py-3 px-5 w-full max-w-lg shadow-lg message-bubble border border-gray-200">
+                            <p class="text-sm text-green-700 mb-2 flex items-center gap-1 font-medium">
+                                <i class="mdi mdi-robot text-lg"></i>
+                                Off-Grid AI
+                            </p>
+                            <p class="font-semibold mb-1 flex items-center gap-1">
+                                <i class="mdi mdi-map-marker text-green-700"></i>
+                                Zion area tomorrow:
+                            </p>
+                            <p class="text-gray-700">High 72°F, Low 48°F<br/>
+                            10% precip, SW winds 8-12mph<br/>
+                            Clear & dry. Good conditions.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- First Aid Demo -->
+                <div v-show="currentDemo === 1">
+                    <div class="flex justify-end mb-4">
+                        <div class="bg-gradient-to-br from-green-700 to-green-800 text-white rounded-2xl py-3 px-5 w-full max-w-lg message-bubble shadow-lg">
+                            <p class="text-sm opacity-70 mb-1">You</p>
+                            I rolled my ankle. What should I do?
+                        </div>
+                    </div>
+                    <div class="flex justify-start mb-4">
+                        <div class="bg-white rounded-2xl py-3 px-5 w-full max-w-lg shadow-lg message-bubble border border-gray-200">
+                            <p class="text-sm text-green-700 mb-2 flex items-center gap-1 font-medium">
+                                <i class="mdi mdi-robot text-lg"></i>
+                                Off-Grid AI
+                            </p>
+                            <p class="font-semibold mb-2 flex items-center gap-1">
+                                <i class="mdi mdi-medical-bag text-green-700"></i>
+                                Ankle sprain steps:
+                            </p>
+                            <p class="text-gray-700">1. Rest - avoid weight<br/>
+                            2. Compress with wrap<br/>
+                            3. Elevate above heart<br/>
+                            4. Ice 15-20min per 2-3hrs<br/>
+                            <span class="text-xs text-gray-500 mt-2 block italic bg-amber-50 p-2 rounded border-l-4 border-amber-400">Seek care for severe pain, deformity, or numbness. Info only—not medical advice.</span></p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Web Search Demo -->
+                <div v-show="currentDemo === 2">
+                    <div class="flex justify-end mb-4">
+                        <div class="bg-gradient-to-br from-green-700 to-green-800 text-white rounded-2xl py-3 px-5 w-full max-w-lg message-bubble shadow-lg">
+                            <p class="text-sm opacity-70 mb-1">You</p>
+                            Is it safe to eat prickly pear cactus fruit?
+                        </div>
+                    </div>
+                    <div class="flex justify-start mb-4">
+                        <div class="bg-white rounded-2xl py-3 px-5 w-full max-w-lg shadow-lg message-bubble border border-gray-200">
+                            <p class="text-sm text-green-700 mb-2 flex items-center gap-1 font-medium">
+                                <i class="mdi mdi-robot text-lg"></i>
+                                Off-Grid AI
+                            </p>
+                            <p class="text-gray-700 mb-2">Yes—prickly pear fruit is safe & nutritious. Remove spines first, peel skin. High in vitamin C & fiber. Avoid unripe (green) fruit.</p>
+                            <p class="text-xs text-gray-500 mt-2 flex items-center gap-1">
+                                <i class="mdi mdi-web text-green-700"></i>
+                                Sources: USDA, foraging guides
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- General Q&A Demo -->
+                <div v-show="currentDemo === 3">
+                    <div class="flex justify-end mb-4">
+                        <div class="bg-gradient-to-br from-green-700 to-green-800 text-white rounded-2xl py-3 px-5 w-full max-w-lg message-bubble shadow-lg">
+                            <p class="text-sm opacity-70 mb-1">You</p>
+                            What knot should I use for a tarp ridgeline?
+                        </div>
+                    </div>
+                    <div class="flex justify-start mb-4">
+                        <div class="bg-white rounded-2xl py-3 px-5 w-full max-w-lg shadow-lg message-bubble border border-gray-200">
+                            <p class="text-sm text-green-700 mb-2 flex items-center gap-1 font-medium">
+                                <i class="mdi mdi-robot text-lg"></i>
+                                Off-Grid AI
+                            </p>
+                            <p class="flex items-start gap-2 text-gray-700">
+                                <i class="mdi mdi-tent text-green-700 mt-1 text-xl"></i>
+                                <span>Use a <strong>taught-line hitch</strong>—adjustable tension, easy to tie/untie. Or <strong>trucker's hitch</strong> for mechanical advantage on longer lines. Both stay secure & adjustable.</span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Features Section -->
+    <div id="features" class="py-20 bg-gray-50">
+        <div class="container mx-auto px-6">
+            <h3 class="text-4xl font-bold text-center mb-12 text-gray-800">Key Features</h3>
+
+            <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+
+                <!-- Feature 1 -->
+                <div class="bg-white p-6 rounded-xl shadow-md hover:shadow-xl transition">
+                    <div class="text-5xl mb-4 text-green-700">
+                        <i class="mdi mdi-weather-partly-cloudy"></i>
+                    </div>
+                    <h4 class="text-xl font-bold mb-2">Weather Snapshots</h4>
+                    <p class="text-gray-600">Real-time weather forecasts with temp, precipitation, and wind—compressed to fit in a single text.</p>
+                </div>
+
+                <!-- Feature 2 -->
+                <div class="bg-white p-6 rounded-xl shadow-md hover:shadow-xl transition">
+                    <div class="text-5xl mb-4 text-green-700">
+                        <i class="mdi mdi-magnify"></i>
+                    </div>
+                    <h4 class="text-xl font-bold mb-2">Web Search</h4>
+                    <p class="text-gray-600">Server-side web search with AI summarization when you need current facts or answers beyond the model's knowledge.</p>
+                </div>
+
+                <!-- Feature 3 -->
+                <div class="bg-white p-6 rounded-xl shadow-md hover:shadow-xl transition">
+                    <div class="text-5xl mb-4 text-green-700">
+                        <i class="mdi mdi-medical-bag"></i>
+                    </div>
+                    <h4 class="text-xl font-bold mb-2">First Aid</h4>
+                    <p class="text-gray-600">Step-by-step guidance for common emergencies: sprains, bug bites, hypothermia, dehydration, and more.</p>
+                </div>
+
+                <!-- Feature 4 -->
+                <div class="bg-white p-6 rounded-xl shadow-md hover:shadow-xl transition">
+                    <div class="text-5xl mb-4 text-green-700">
+                        <i class="mdi mdi-robot"></i>
+                    </div>
+                    <h4 class="text-xl font-bold mb-2">AI Q&A</h4>
+                    <p class="text-gray-600">Local LLM answers general questions about outdoor skills, knots, camping, and more—all via text.</p>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Visual Banner -->
+    <div class="relative h-96 bg-cover bg-center" style="background-image: url('static/lesly-derksen-F4fH5dAfZnE-unsplash Large.jpeg');">
+        <div class="relative z-10 container mx-auto px-6 h-full flex items-center justify-center text-center">
+            <div class="text-white max-w-4xl px-6 py-10">
+                <h3 class="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight" style="text-shadow: 0 4px 12px rgba(0,0,0,0.6), 0 2px 4px rgba(0,0,0,0.8);">
+                    Stay Connected, Even When You're Not
+                </h3>
+                <p class="text-xl md:text-2xl lg:text-3xl font-medium leading-relaxed" style="text-shadow: 0 2px 8px rgba(0,0,0,0.6), 0 1px 3px rgba(0,0,0,0.8);">
+                    Satellite SMS meets AI. No data service? No problem.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- How It Works Section -->
+    <div id="how-it-works" class="py-20 bg-white">
+        <div class="container mx-auto px-6">
+            <h3 class="text-4xl font-bold text-center mb-12 text-gray-800">How It Works</h3>
+
+            <div class="max-w-4xl mx-auto">
+                <div class="space-y-8">
+
+                    <!-- Step 1 -->
+                    <div class="flex gap-6 items-start">
+                        <div class="flex-shrink-0 w-12 h-12 bg-purple-600 text-white rounded-full flex items-center justify-center text-xl font-bold">
+                            1
+                        </div>
+                        <div>
+                            <h4 class="text-xl font-bold mb-2">You Send an SMS</h4>
+                            <p class="text-gray-600">Text your question in natural language—no commands, no syntax. Works via satellite SMS when you're off-grid.</p>
+                        </div>
+                    </div>
+
+                    <!-- Step 2 -->
+                    <div class="flex gap-6 items-start">
+                        <div class="flex-shrink-0 w-12 h-12 bg-purple-600 text-white rounded-full flex items-center justify-center text-xl font-bold">
+                            2
+                        </div>
+                        <div>
+                            <h4 class="text-xl font-bold mb-2">Smart Routing</h4>
+                            <p class="text-gray-600">The system detects your intent and routes to the right tool: Weather API, Local LLM, Web Search, or First-Aid decision tree.</p>
+                        </div>
+                    </div>
+
+                    <!-- Step 3 -->
+                    <div class="flex gap-6 items-start">
+                        <div class="flex-shrink-0 w-12 h-12 bg-purple-600 text-white rounded-full flex items-center justify-center text-xl font-bold">
+                            3
+                        </div>
+                        <div>
+                            <h4 class="text-xl font-bold mb-2">Intelligent Processing</h4>
+                            <p class="text-gray-600">High-confidence answers come from the local LLM. Low-confidence or fact-heavy queries trigger server-side web search with AI summarization.</p>
+                        </div>
+                    </div>
+
+                    <!-- Step 4 -->
+                    <div class="flex gap-6 items-start">
+                        <div class="flex-shrink-0 w-12 h-12 bg-purple-600 text-white rounded-full flex items-center justify-center text-xl font-bold">
+                            4
+                        </div>
+                        <div>
+                            <h4 class="text-xl font-bold mb-2">Compressed Reply</h4>
+                            <p class="text-gray-600">Get a concise, actionable answer optimized for satellite bandwidth. Reply "more" for additional details if needed.</p>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Use Cases Section -->
+    <div class="py-20 bg-gradient-to-br from-green-50 to-emerald-50">
+        <div class="container mx-auto px-4 sm:px-6">
+            <div class="text-center mb-16">
+                <h3 class="text-4xl sm:text-5xl font-bold mb-4 text-gray-800">Perfect For</h3>
+                <p class="text-lg text-gray-600 max-w-2xl mx-auto">
+                    Whether you're exploring the backcountry or living off-grid, get the answers you need via satellite SMS.
+                </p>
+            </div>
+
+            <!-- Image Gallery -->
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-16 max-w-6xl mx-auto">
+                <div class="relative overflow-hidden rounded-xl shadow-lg group cursor-pointer">
+                    <img src="static/lesly-derksen-F4fH5dAfZnE-unsplash Large.jpeg"
+                         alt="Hiking in nature"
+                         class="h-48 sm:h-64 w-full object-cover transition-transform duration-500 group-hover:scale-110">
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-4">
+                        <span class="text-white font-semibold text-sm sm:text-base">Hiking & Backpacking</span>
+                    </div>
+                </div>
+                <div class="relative overflow-hidden rounded-xl shadow-lg group cursor-pointer">
+                    <img src="static/devon-mackay--lrJpsE6haY-unsplash.jpg"
+                         alt="Camping under stars"
+                         class="h-48 sm:h-64 w-full object-cover transition-transform duration-500 group-hover:scale-110">
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-4">
+                        <span class="text-white font-semibold text-sm sm:text-base">Camping & RV Life</span>
+                    </div>
+                </div>
+                <div class="relative overflow-hidden rounded-xl shadow-lg group cursor-pointer">
+                    <img src="static/colin-moldenhauer-RMhgATUx0Cc-unsplash.jpg"
+                         alt="Remote outdoor adventure"
+                         class="h-48 sm:h-64 w-full object-cover transition-transform duration-500 group-hover:scale-110">
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-4">
+                        <span class="text-white font-semibold text-sm sm:text-base">Remote Adventures</span>
+                    </div>
+                </div>
+                <div class="relative overflow-hidden rounded-xl shadow-lg group cursor-pointer">
+                    <img src="static/vincentiu-solomon-7MH4ped6_Mo-unsplash.jpg"
+                         alt="Off-grid adventures"
+                         class="h-48 sm:h-64 w-full object-cover transition-transform duration-500 group-hover:scale-110">
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-4">
+                        <span class="text-white font-semibold text-sm sm:text-base">Off-Grid Living</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Use Case Cards -->
+            <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 max-w-6xl mx-auto">
+                <div class="bg-white p-8 rounded-2xl shadow-md hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 border border-green-100">
+                    <div class="w-16 h-16 bg-green-100 rounded-2xl flex items-center justify-center mb-4">
+                        <i class="mdi mdi-hiking text-4xl text-green-700"></i>
+                    </div>
+                    <h4 class="font-bold text-xl mb-3 text-gray-800">Hikers & Backpackers</h4>
+                    <p class="text-gray-600 leading-relaxed">Trail conditions, weather checks, and first-aid guidance when miles from civilization.</p>
+                </div>
+
+                <div class="bg-white p-8 rounded-2xl shadow-md hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 border border-green-100">
+                    <div class="w-16 h-16 bg-green-100 rounded-2xl flex items-center justify-center mb-4">
+                        <i class="mdi mdi-campfire text-4xl text-green-700"></i>
+                    </div>
+                    <h4 class="font-bold text-xl mb-3 text-gray-800">Campers & RVers</h4>
+                    <p class="text-gray-600 leading-relaxed">Quick answers about wildlife, knots, fire safety, and outdoor skills.</p>
+                </div>
+
+                <div class="bg-white p-8 rounded-2xl shadow-md hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 border border-green-100">
+                    <div class="w-16 h-16 bg-green-100 rounded-2xl flex items-center justify-center mb-4">
+                        <i class="mdi mdi-car-side text-4xl text-green-700"></i>
+                    </div>
+                    <h4 class="font-bold text-xl mb-3 text-gray-800">Overlanders</h4>
+                    <p class="text-gray-600 leading-relaxed">Route planning, mechanical tips, and emergency guidance in remote areas.</p>
+                </div>
+
+                <div class="bg-white p-8 rounded-2xl shadow-md hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 border border-green-100">
+                    <div class="w-16 h-16 bg-green-100 rounded-2xl flex items-center justify-center mb-4">
+                        <i class="mdi mdi-sail-boat text-4xl text-green-700"></i>
+                    </div>
+                    <h4 class="font-bold text-xl mb-3 text-gray-800">Sailors</h4>
+                    <p class="text-gray-600 leading-relaxed">Weather updates and navigation help when offshore with limited connectivity.</p>
+                </div>
+
+                <div class="bg-white p-8 rounded-2xl shadow-md hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 border border-green-100">
+                    <div class="w-16 h-16 bg-green-100 rounded-2xl flex items-center justify-center mb-4">
+                        <i class="mdi mdi-bag-personal text-4xl text-green-700"></i>
+                    </div>
+                    <h4 class="font-bold text-xl mb-3 text-gray-800">Scout Leaders</h4>
+                    <p class="text-gray-600 leading-relaxed">Teaching resources and safety info during remote outings with groups.</p>
+                </div>
+
+                <div class="bg-white p-8 rounded-2xl shadow-md hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 border border-green-100">
+                    <div class="w-16 h-16 bg-green-100 rounded-2xl flex items-center justify-center mb-4">
+                        <i class="mdi mdi-pine-tree text-4xl text-green-700"></i>
+                    </div>
+                    <h4 class="font-bold text-xl mb-3 text-gray-800">Remote Workers</h4>
+                    <p class="text-gray-600 leading-relaxed">Off-grid cabin dwellers who need occasional fact-checking without internet.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tech Stack Section -->
+    <div class="py-16 bg-gray-900 text-white">
+        <div class="container mx-auto px-6">
+            <div class="max-w-4xl mx-auto text-center">
+                <h3 class="text-3xl sm:text-4xl font-bold mb-4">Real Hardware, Real Privacy</h3>
+                <p class="text-lg text-gray-300 mb-8">
+                    Fast AI responses from our homelab server—no cloud dependencies or data sharing
+                </p>
+
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
+                    <div class="bg-gray-800/50 backdrop-blur-sm p-4 rounded-xl border border-gray-700 hover:border-green-500 transition">
+                        <i class="mdi mdi-language-python text-3xl text-green-400 mb-2"></i>
+                        <p class="text-sm font-medium">Python FastAPI</p>
+                    </div>
+                    <div class="bg-gray-800/50 backdrop-blur-sm p-4 rounded-xl border border-gray-700 hover:border-green-500 transition">
+                        <i class="mdi mdi-robot text-3xl text-green-400 mb-2"></i>
+                        <p class="text-sm font-medium">Local LLM (Ollama)</p>
+                    </div>
+                    <div class="bg-gray-800/50 backdrop-blur-sm p-4 rounded-xl border border-gray-700 hover:border-green-500 transition">
+                        <i class="mdi mdi-database text-3xl text-green-400 mb-2"></i>
+                        <p class="text-sm font-medium">sqlite3</p>
+                    </div>
+                    <div class="bg-gray-800/50 backdrop-blur-sm p-4 rounded-xl border border-gray-700 hover:border-green-500 transition">
+                        <i class="mdi mdi-message-text text-3xl text-green-400 mb-2"></i>
+                        <p class="text-sm font-medium">Twilio SMS</p>
+                    </div>
+                </div>
+
+                <p class="text-sm text-gray-400">
+                    CS/SE 4600 Senior Project • Cost-optimized with intelligent fallbacks
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-gray-400 py-8">
+        <div class="container mx-auto px-6 text-center">
+            <p class="mb-2">Off-Grid AI Agent - Senior Project</p>
+            <p class="text-sm">Aston Haycock • CS/SE 4600</p>
+            <p class="text-xs mt-4 text-gray-500">
+                Informational responses only. Not a substitute for emergency services or professional medical advice.
+            </p>
+            <p class="text-xs mt-2 text-gray-500">
+                Satellite SMS requires iPhone 14 or newer with iOS 16.1+
+            </p>
+        </div>
+    </footer>
+
+    </div><!-- end #app -->
+
+    <script>
+        // Redirect to dashboard if already logged in
+        const token = localStorage.getItem('access_token');
+        if (token) {
+            window.location.href = 'dashboard.html';
+        }
+
+        const { createApp } = Vue;
+        createApp({
+            data() {
+                return {
+                    currentDemo: 0,
+                    showDemos: false
+                };
+            }
+        }).mount('#app');
+    </script>
+
+</body>
+</html>

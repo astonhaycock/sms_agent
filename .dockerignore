@@ -1,0 +1,23 @@
+# Virtual env and caches
+.venv
+__pycache__
+*.pyc
+.python-version
+
+# Git and IDE
+.git
+.gitignore
+.cursor
+*.md
+!langgraph/**/README*
+!webapp/README.md
+
+# Env files (mount or pass at run time)
+.env
+.env.*
+!.env.example
+
+# Optional
+*.db
+*.sqlite3
+*.sqlite3

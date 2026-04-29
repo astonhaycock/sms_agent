@@ -1,0 +1,20 @@
+[project]
+name = "sms-agent"
+version = "0.1.0"
+description = "Off-Grid AI Agent - SMS-based AI assistant for remote areas"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "agent",
+    "webapp",
+]
+
+[tool.uv.workspace]
+members = [
+    "langgraph",
+    "webapp",
+]
+
+[tool.uv.sources]
+agent = { workspace = true }
+webapp = { workspace = true }

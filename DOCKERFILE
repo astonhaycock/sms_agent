@@ -1,0 +1,31 @@
+# sms_agent: runs webapp (optional if port in use) + LangGraph agent router
+FROM python:3.12-slim
+
+WORKDIR /app
+
+# Install uv and system deps (curl; build-essential + libsqlite3-dev for pysqlite3)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    build-essential \
+    libsqlite3-dev \
+    && rm -rf /var/lib/apt/lists/* \
+    && curl -LsSf https://astral.sh/uv/install.sh | sh \
+    && mv /root/.local/bin/uv /usr/local/bin/uv
+
+# Copy workspace and app code (uv sync needs member dirs for workspace install)
+COPY pyproject.toml uv.lock ./
+COPY langgraph/ ./langgraph/
+COPY webapp/ ./webapp/
+
+# Install workspace and dependencies (no dev)
+RUN uv sync --frozen --no-dev
+
+# Entrypoint: start webapp only if its port is free, then start LangGraph
+COPY docker/entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+EXPOSE 8080 8000
+
+# Webapp on 8080, LangGraph on 8000 (override with WEBAPP_PORT / AGENT_PORT).
+# At runtime pass env (e.g. -e SECRET_KEY=... or --env-file .env) for webapp and Twilio/Langfuse for the agent.
+ENTRYPOINT ["/entrypoint.sh"]

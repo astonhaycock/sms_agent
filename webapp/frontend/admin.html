@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login - Off-Grid AI Agent</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+        <script src="https://cdn.jsdelivr.net/npm/vue@3.5.28/dist/vue.global.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mdi/font@7.4.47/css/materialdesignicons.min.css">
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .gradient-bg {
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+
+    <div id="app">
+
+    <!-- Navigation -->
+    <nav class="bg-white shadow-sm">
+        <div class="container mx-auto px-4 sm:px-6 py-4">
+            <div class="flex justify-between items-center">
+                <a href="index.html" class="text-xl sm:text-2xl font-bold flex items-center gap-2 text-purple-600">
+                    <i class="mdi mdi-satellite-variant text-2xl sm:text-3xl"></i>
+                    <span>Off-Grid AI Agent</span>
+                </a>
+                <a href="index.html" class="text-sm sm:text-base text-gray-600 hover:text-purple-600 transition">
+                    <i class="mdi mdi-arrow-left"></i>
+                    Back to Home
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Login Section -->
+    <div class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+        <div class="max-w-md w-full">
+            <!-- Header -->
+            <div class="text-center mb-8">
+                <div class="w-20 h-20 bg-gradient-to-br from-purple-600 to-blue-600 rounded-2xl mx-auto mb-4 flex items-center justify-center shadow-lg">
+                    <i class="mdi mdi-shield-account text-4xl text-white"></i>
+                </div>
+                <h2 class="text-3xl font-bold text-gray-900 mb-2">Admin Login</h2>
+                <p class="text-gray-600">Sign in to access the dashboard</p>
+            </div>
+
+            <!-- Error Message -->
+            <div v-if="errorMessage" class="mb-6 bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-3">
+                <i class="mdi mdi-alert-circle text-red-600 text-xl"></i>
+                <div>
+                    <p class="text-sm font-medium text-red-800">{{ errorMessage }}</p>
+                </div>
+            </div>
+
+            <!-- Success Message -->
+            <div v-if="successMessage" class="mb-6 bg-green-50 border border-green-200 rounded-lg p-4 flex items-start gap-3">
+                <i class="mdi mdi-check-circle text-green-600 text-xl"></i>
+                <div>
+                    <p class="text-sm font-medium text-green-800">{{ successMessage }}</p>
+                </div>
+            </div>
+
+            <!-- Login Form -->
+            <div class="bg-white rounded-2xl shadow-xl p-8 border border-gray-200">
+                <form @submit.prevent="submitLogin">
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="mdi mdi-account"></i> Username
+                        </label>
+                        <input
+                            type="text"
+                            v-model="username"
+                            required
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent transition"
+                            placeholder="Enter your username">
+                    </div>
+
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="mdi mdi-lock"></i> Password
+                        </label>
+                        <input
+                            type="password"
+                            v-model="password"
+                            required
+                            maxlength="72"
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent transition"
+                            placeholder="Enter your password">
+                        <p class="text-xs text-gray-500 mt-1">Maximum 72 characters</p>
+                    </div>
+
+                    <div class="flex items-center justify-between mb-6">
+                        <label class="flex items-center">
+                            <input type="checkbox" v-model="rememberMe" class="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500">
+                            <span class="ml-2 text-sm text-gray-600">Remember me</span>
+                        </label>
+                        <a href="#" class="text-sm text-purple-600 hover:text-purple-700">Forgot password?</a>
+                    </div>
+
+                    <button
+                        type="submit"
+                        :disabled="loading"
+                        class="w-full bg-gradient-to-r from-purple-600 to-blue-600 text-white py-3 rounded-lg font-semibold hover:from-purple-700 hover:to-blue-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed">
+                        <i :class="loading ? 'mdi mdi-loading mdi-spin' : 'mdi mdi-login'"></i>
+                        <span>{{ loading ? 'Signing in...' : 'Sign In' }}</span>
+                    </button>
+                </form>
+
+                <div class="mt-6 text-center text-sm text-gray-600">
+                    <p>Don't have an account? <a href="#" class="text-purple-600 hover:text-purple-700 font-medium">Contact Admin</a></p>
+                </div>
+            </div>
+
+            <!-- Info Box -->
+            <div class="mt-6 bg-purple-50 border border-purple-200 rounded-lg p-4">
+                <div class="flex items-start gap-3">
+                    <i class="mdi mdi-information text-purple-600 text-xl"></i>
+                    <div class="text-sm text-purple-800">
+                        <p class="font-medium mb-1">Admin Access Only</p>
+                        <p class="text-purple-700">This dashboard is for authorized administrators to manage the SMS agent system.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    </div><!-- end #app -->
+
+    <script>
+        const { createApp } = Vue;
+        createApp({
+            data() {
+                return {
+                    username: '',
+                    password: '',
+                    rememberMe: false,
+                    loading: false,
+                    errorMessage: '',
+                    successMessage: ''
+                };
+            },
+            mounted() {
+                // Test API connection on page load
+                fetch('/api')
+                    .then(response => {
+                        if (!response.ok) throw new Error('API not responding');
+                        return response.json();
+                    })
+                    .then(data => {
+                        console.log('API connection test successful:', data);
+                    })
+                    .catch(error => {
+                        console.warn('API connection test failed:', error);
+                        this.errorMessage = "Warning: Cannot connect to API server. Please make sure it's running.";
+                    });
+            },
+            methods: {
+                async submitLogin() {
+                    this.errorMessage = '';
+                    this.successMessage = '';
+
+                    if (!this.username || !this.password) {
+                        this.errorMessage = 'Please enter both username and password';
+                        return;
+                    }
+                    if (this.password.length > 72) {
+                        this.errorMessage = 'Password is too long. Maximum length is 72 characters.';
+                        return;
+                    }
+
+                    this.loading = true;
+                    try {
+                        const response = await fetch('/api/auth/login', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                username: this.username,
+                                password: this.password
+                            })
+                        });
+                        const data = await response.json();
+
+                        if (response.ok) {
+                            localStorage.setItem('access_token', data.access_token);
+                            localStorage.setItem('token_type', data.token_type);
+                            localStorage.setItem('username', this.username);
+                            this.successMessage = 'Login successful! Redirecting...';
+                            setTimeout(() => { window.location.href = 'index.html'; }, 1000);
+                        } else {
+                            this.errorMessage = data.detail || 'Invalid credentials. Please try again.';
+                        }
+                    } catch (error) {
+                        if (error.name === 'TypeError' && error.message.includes('fetch')) {
+                            this.errorMessage = 'Unable to connect to server. Please ensure the API is running (python api.py)';
+                        } else {
+                            this.errorMessage = 'An unexpected error occurred: ' + error.message;
+                        }
+                    } finally {
+                        this.loading = false;
+                    }
+                }
+            }
+        }).mount('#app');
+    </script>
+
+</body>
+</html>

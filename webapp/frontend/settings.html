@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings - Off-Grid AI Agent</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue@3.5.28/dist/vue.global.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mdi/font@7.4.47/css/materialdesignicons.min.css">
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .gradient-bg {
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+
+    <div id="app">
+
+    <!-- Navigation -->
+    <nav class="bg-white shadow-sm border-b border-gray-200">
+        <div class="container mx-auto px-4 sm:px-6 py-4">
+            <div class="flex justify-between items-center">
+                <a href="index.html" class="text-xl sm:text-2xl font-bold flex items-center gap-2 text-purple-600">
+                    <i class="mdi mdi-satellite-variant text-2xl sm:text-3xl"></i>
+                    <span>Off-Grid AI Agent</span>
+                </a>
+                <div class="flex items-center gap-4">
+                    <a href="dashboard.html" class="text-gray-600 hover:text-purple-600 transition flex items-center gap-1">
+                        <i class="mdi mdi-view-dashboard"></i>
+                        <span class="hidden sm:inline">Dashboard</span>
+                    </a>
+                    <a href="settings.html" class="text-purple-600 font-medium flex items-center gap-1">
+                        <i class="mdi mdi-cog"></i>
+                        <span class="hidden sm:inline">Settings</span>
+                    </a>
+                    <button @click="logout" class="text-gray-600 hover:text-red-600 transition flex items-center gap-1">
+                        <i class="mdi mdi-logout"></i>
+                        <span class="hidden sm:inline">Logout</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container mx-auto px-4 sm:px-6 py-8 max-w-4xl">
+        <!-- Header -->
+        <div class="mb-8">
+            <h1 class="text-3xl sm:text-4xl font-bold text-gray-900 mb-2">Settings</h1>
+            <p class="text-gray-600">Manage your preferences and account settings.</p>
+        </div>
+
+        <!-- LLM API Keys -->
+        <div class="bg-white rounded-xl shadow-md p-6 border border-gray-200 mb-6">
+            <h2 class="text-xl font-bold text-gray-900 mb-2 flex items-center gap-2">
+                <i class="mdi mdi-key-variant text-purple-600"></i>
+                AI Provider
+            </h2>
+            <p class="text-gray-600 mb-6">Select which AI provider powers the SMS agent. Cloud provider keys are encrypted and <strong>cannot be viewed after saving</strong>.</p>
+
+            <div class="space-y-4">
+
+                <!-- Local (Ollama) card — always available -->
+                <div class="border rounded-lg p-4 transition"
+                    :class="activeProvider === 'local' ? 'border-purple-400 bg-purple-50' : 'border-gray-200'">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-lg flex items-center justify-center bg-gray-100">
+                                <i class="mdi mdi-server text-xl text-gray-600"></i>
+                            </div>
+                            <div>
+                                <p class="font-medium text-gray-900">Local (Ollama)</p>
+                                <p class="text-xs text-gray-500">Runs on your own hardware — no API key needed</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span v-if="activeProvider === 'local'" class="px-2 py-1 bg-purple-100 text-purple-700 text-xs rounded-full font-medium flex items-center gap-1">
+                                <i class="mdi mdi-check-circle text-sm"></i> Active
+                            </span>
+                            <button v-else @click="setActiveProvider('local')"
+                                class="px-3 py-1.5 text-xs font-medium border border-purple-400 text-purple-600 rounded-lg hover:bg-purple-50 transition">
+                                Set Active
+                            </button>
+                        </div>
+                    </div>
+                    <!-- Model picker -->
+                    <div class="mt-3 pt-3 border-t border-gray-200">
+                        <label class="block text-xs font-medium text-gray-600 mb-1.5">Model</label>
+                        <div v-if="ollamaModelsLoading" class="text-xs text-gray-400 italic">Loading models...</div>
+                        <div v-else-if="ollamaModels.length === 0" class="text-xs text-gray-400 italic">Could not reach Ollama</div>
+                        <select v-else :value="localModel" @change="setLocalModel($event.target.value)"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-600 focus:border-transparent transition bg-white">
+                            <option v-for="m in ollamaModels" :key="m" :value="m">{{ m }}</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Cloud provider cards -->
+                <div v-for="p in providers" :key="p.id" class="border rounded-lg p-4 transition"
+                    :class="activeProvider === p.id ? 'border-purple-400 bg-purple-50' : 'border-gray-200'">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-lg flex items-center justify-center" :class="p.bgColor">
+                                <i class="text-xl" :class="[p.icon, p.iconColor]"></i>
+                            </div>
+                            <div>
+                                <p class="font-medium text-gray-900">{{ p.label }}</p>
+                                <p class="text-xs font-mono" :class="p.isSet ? 'text-gray-600' : 'text-gray-400'">
+                                    {{ p.isSet ? p.hint : 'No key saved' }}
+                                </p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span v-if="activeProvider === p.id" class="px-2 py-1 bg-purple-100 text-purple-700 text-xs rounded-full font-medium flex items-center gap-1">
+                                <i class="mdi mdi-check-circle text-sm"></i> Active
+                            </span>
+                            <button v-else-if="p.isSet" @click="setActiveProvider(p.id)"
+                                class="px-3 py-1.5 text-xs font-medium border border-purple-400 text-purple-600 rounded-lg hover:bg-purple-50 transition">
+                                Set Active
+                            </button>
+                            <button @click="p.showInput = !p.showInput" class="text-sm text-purple-600 hover:text-purple-700 font-medium">
+                                {{ p.isSet ? 'Change Key' : 'Add Key' }}
+                            </button>
+                        </div>
+                    </div>
+                    <div v-if="p.showInput" class="mt-3">
+                        <div class="flex gap-2">
+                            <input type="password" v-model="p.inputValue" :placeholder="p.placeholder"
+                                class="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-600 focus:border-transparent">
+                            <button @click="saveKey(p)" class="px-4 py-2 bg-purple-600 text-white text-sm rounded-lg hover:bg-purple-700 transition font-medium">Save</button>
+                            <button @click="p.showInput = false; p.inputValue = ''" class="px-4 py-2 bg-gray-100 text-gray-700 text-sm rounded-lg hover:bg-gray-200 transition">Cancel</button>
+                        </div>
+                    </div>
+                    <div v-if="p.isSet && !p.showInput" class="mt-2">
+                        <button @click="removeKey(p)" class="text-xs text-red-600 hover:text-red-700 font-medium flex items-center gap-1">
+                            <i class="mdi mdi-delete-outline"></i> Remove key
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Gmail Integration -->
+        <div class="bg-white rounded-xl shadow-md p-6 border border-gray-200 mb-6">
+            <h2 class="text-xl font-bold text-gray-900 mb-2 flex items-center gap-2">
+                <i class="mdi mdi-email-fast text-purple-600"></i>
+                Gmail Integration
+            </h2>
+            <p class="text-gray-600 mb-4">Connect Gmail to receive SMS alerts when emails arrive from specific senders. You can also ask the SMS agent to list your last 10 emails or reply to one.</p>
+
+            <!-- Not connected -->
+            <div v-if="!gmailConnected" class="flex items-center justify-between py-2">
+                <div class="flex items-center gap-3">
+                    <div class="w-12 h-12 bg-red-50 border border-red-200 rounded-lg flex items-center justify-center">
+                        <i class="mdi mdi-email-off text-red-500 text-2xl"></i>
+                    </div>
+                    <div>
+                        <p class="font-medium text-gray-900">Gmail</p>
+                        <p class="text-sm text-gray-500">Not connected</p>
+                    </div>
+                </div>
+                <button @click="connectGmail" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition text-sm font-medium flex items-center gap-2">
+                    <i class="mdi mdi-link-variant"></i> Connect Gmail
+                </button>
+            </div>
+
+            <!-- Connected -->
+            <div v-else>
+                <div class="flex items-center justify-between py-2 mb-5">
+                    <div class="flex items-center gap-3">
+                        <div class="w-12 h-12 bg-green-50 border border-green-200 rounded-lg flex items-center justify-center">
+                            <i class="mdi mdi-email-check text-green-600 text-2xl"></i>
+                        </div>
+                        <div>
+                            <p class="font-medium text-gray-900">Gmail Connected</p>
+                            <p class="text-sm text-gray-500">{{ gmailEmail }}</p>
+                        </div>
+                    </div>
+                    <button @click="disconnectGmail" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition text-sm font-medium">
+                        Disconnect
+                    </button>
+                </div>
+
+                <!-- Watched Senders -->
+                <div class="border-t border-gray-200 pt-5">
+                    <div class="flex items-start justify-between mb-1">
+                        <h3 class="text-base font-semibold text-gray-900 flex items-center gap-2">
+                            <i class="mdi mdi-bell-ring text-purple-500"></i>
+                            SMS Alerts
+                        </h3>
+                        <span class="text-xs text-gray-400 bg-gray-100 rounded-full px-2 py-0.5">{{ watchedSenders.length }} watched</span>
+                    </div>
+                    <p class="text-sm text-gray-500 mb-4">Get an SMS when a new email arrives from these senders.</p>
+
+                    <!-- Add sender -->
+                    <div class="flex gap-2 mb-4">
+                        <input
+                            type="email"
+                            v-model="newSenderEmail"
+                            @keyup.enter="addWatchedSender"
+                            placeholder="someone@example.com"
+                            class="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                            :disabled="addingSender">
+                        <button @click="addWatchedSender"
+                            :disabled="addingSender"
+                            class="px-4 py-2 bg-purple-600 text-white text-sm rounded-lg hover:bg-purple-700 transition font-medium flex items-center gap-1 disabled:opacity-60 disabled:cursor-not-allowed">
+                            <i :class="addingSender ? 'mdi mdi-loading mdi-spin' : 'mdi mdi-plus'"></i>
+                            {{ addingSender ? 'Adding...' : 'Watch' }}
+                        </button>
+                    </div>
+
+                    <!-- Sender list -->
+                    <div v-if="watchedSenders.length === 0" class="flex flex-col items-center justify-center py-6 text-center bg-gray-50 rounded-lg border border-dashed border-gray-200">
+                        <i class="mdi mdi-email-outline text-3xl text-gray-300 mb-2"></i>
+                        <p class="text-sm text-gray-400">No senders watched yet.</p>
+                        <p class="text-xs text-gray-400 mt-0.5">Add an email above to get SMS alerts.</p>
+                    </div>
+                    <ul v-else class="space-y-2">
+                        <li v-for="sender in watchedSenders" :key="sender.email_address"
+                            class="flex items-center justify-between bg-white border border-gray-200 rounded-lg px-4 py-3 shadow-sm hover:border-purple-200 transition">
+                            <div class="flex items-center gap-3 min-w-0">
+                                <div class="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center flex-shrink-0">
+                                    <i class="mdi mdi-account text-purple-500"></i>
+                                </div>
+                                <div class="min-w-0">
+                                    <p v-if="sender.display_name" class="text-sm font-medium text-gray-900 truncate">{{ sender.display_name }}</p>
+                                    <p class="text-xs text-gray-500 truncate">{{ sender.email_address }}</p>
+                                </div>
+                            </div>
+                            <button @click="removeWatchedSender(sender.email_address)"
+                                class="ml-3 flex-shrink-0 p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition">
+                                <i class="mdi mdi-trash-can-outline text-lg"></i>
+                            </button>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Danger Zone -->
+        <div class="bg-red-50 border border-red-200 rounded-xl shadow-md p-6 mb-6">
+            <h2 class="text-xl font-bold text-red-900 mb-4 flex items-center gap-2">
+                <i class="mdi mdi-alert-circle text-red-600"></i>
+                Danger Zone
+            </h2>
+
+            <div class="space-y-4">
+                <div class="flex items-center justify-between py-3 border-b border-red-200">
+                    <div>
+                        <p class="font-medium text-red-900">Clear Message History</p>
+                        <p class="text-sm text-red-700">Delete all your message history permanently</p>
+                    </div>
+                    <button @click="clearHistory" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition text-sm font-medium">
+                        Clear History
+                    </button>
+                </div>
+
+                <div class="flex items-center justify-between py-3">
+                    <div>
+                        <p class="font-medium text-red-900">Delete Account</p>
+                        <p class="text-sm text-red-700">Permanently delete your account and all data</p>
+                    </div>
+                    <button @click="deleteAccount" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition text-sm font-medium">
+                        Delete Account
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Confirm Modal -->
+    <div v-if="confirmModal.show" class="fixed inset-0 z-50 flex items-center justify-center">
+        <div class="absolute inset-0 bg-black/50" @click="confirmModalDo(false)"></div>
+        <div class="relative bg-white rounded-xl shadow-xl p-6 max-w-sm w-full mx-4">
+            <h3 class="text-lg font-bold text-gray-900 mb-2">{{ confirmModal.title }}</h3>
+            <p class="text-gray-600 mb-6">{{ confirmModal.message }}</p>
+            <div class="flex justify-end gap-3">
+                <button @click="confirmModalDo(false)"
+                    class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition font-medium">
+                    Cancel
+                </button>
+                <button @click="confirmModalDo(true)"
+                    :class="confirmModal.danger ? 'bg-red-600 hover:bg-red-700' : 'bg-purple-600 hover:bg-purple-700'"
+                    class="px-4 py-2 text-white rounded-lg font-medium transition">
+                    {{ confirmModal.confirmText }}
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Account Modal -->
+    <div v-if="deleteAccountModal.show" class="fixed inset-0 z-50 flex items-center justify-center">
+        <div class="absolute inset-0 bg-black/50"></div>
+        <div class="relative bg-white rounded-xl shadow-xl p-6 max-w-sm w-full mx-4">
+            <div class="flex items-center gap-2 mb-2">
+                <i class="mdi mdi-alert-circle text-red-600 text-xl"></i>
+                <h3 class="text-lg font-bold text-red-900">Delete Account</h3>
+            </div>
+            <p class="text-gray-600 mb-5">This will permanently delete your account and all data. This cannot be undone.</p>
+            <div class="space-y-4 mb-6">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Type <span class="font-mono font-bold">DELETE</span> to confirm</label>
+                    <input type="text" v-model="deleteAccountModal.typedConfirm" placeholder="DELETE"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-red-500 focus:border-transparent">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                    <input type="password" v-model="deleteAccountModal.password" placeholder="Your password"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-red-500 focus:border-transparent">
+                </div>
+            </div>
+            <div class="flex justify-end gap-3">
+                <button @click="deleteAccountModal.show = false"
+                    class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition font-medium">
+                    Cancel
+                </button>
+                <button @click="confirmDeleteAccount"
+                    :disabled="deleteAccountModal.typedConfirm !== 'DELETE' || !deleteAccountModal.password"
+                    class="px-4 py-2 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition disabled:opacity-50 disabled:cursor-not-allowed">
+                    Delete Account
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div
+        v-if="toast.show"
+        class="fixed bottom-4 right-4 bg-gray-900 text-white px-6 py-3 rounded-lg shadow-lg flex items-center gap-2">
+        <i :class="toast.isError ? 'mdi mdi-alert-circle text-red-400' : 'mdi mdi-check-circle text-green-400'"></i>
+        <span>{{ toast.message }}</span>
+    </div>
+
+    </div><!-- end #app -->
+
+    <script>
+        // Redirect immediately if not authenticated
+        const token = localStorage.getItem('access_token');
+        if (!token) {
+            window.location.href = 'login.html';
+        }
+
+        const { createApp } = Vue;
+        createApp({
+            data() {
+                return {
+                    token: localStorage.getItem('access_token'),
+                    toast: { show: false, message: '', isError: false },
+                    confirmModal: { show: false, title: '', message: '', confirmText: 'Confirm', danger: false, _resolve: null },
+                    deleteAccountModal: { show: false, typedConfirm: '', password: '' },
+                    // LLM providers
+                    activeProvider: 'local',
+                    localModel: '',
+                    ollamaModels: [],
+                    ollamaModelsLoading: false,
+                    providers: [
+                        { id: 'claude',  label: 'Claude (Anthropic)', placeholder: 'sk-ant-api03-...', icon: 'mdi mdi-robot',  bgColor: 'bg-orange-100', iconColor: 'text-orange-600', isSet: false, hint: '', showInput: false, inputValue: '' },
+                        { id: 'openai',  label: 'ChatGPT (OpenAI)',   placeholder: 'sk-proj-...',      icon: 'mdi mdi-brain',  bgColor: 'bg-emerald-100', iconColor: 'text-emerald-600', isSet: false, hint: '', showInput: false, inputValue: '' },
+                        { id: 'gemini',  label: 'Gemini (Google)',    placeholder: 'AIza...',           icon: 'mdi mdi-google', bgColor: 'bg-blue-100',    iconColor: 'text-blue-600',    isSet: false, hint: '', showInput: false, inputValue: '' },
+                    ],
+                    // Gmail
+                    gmailConnected: false,
+                    gmailEmail: '',
+                    watchedSenders: [],
+                    newSenderEmail: '',
+                    addingSender: false,
+                };
+            },
+            mounted() {
+                this.loadLLMKeyStatus();
+                this.loadActiveProvider();
+                this.loadOllamaModels();
+                this.loadLocalModel();
+                this.loadGmailStatus();
+                this.loadWatchedSenders();
+                // Check for OAuth redirect result
+                const params = new URLSearchParams(window.location.search);
+                if (params.get('gmail') === 'connected') { this.showToast('Gmail connected successfully!'); history.replaceState({}, '', '/settings'); }
+                else if (params.get('gmail') === 'error') { this.showToast('Gmail connection failed. Please try again.', true); history.replaceState({}, '', '/settings'); }
+            },
+            methods: {
+                openConfirm(title, message, confirmText = 'Confirm', danger = false) {
+                    return new Promise(resolve => {
+                        this.confirmModal = { show: true, title, message, confirmText, danger, _resolve: resolve };
+                    });
+                },
+                confirmModalDo(result) {
+                    this.confirmModal.show = false;
+                    if (this.confirmModal._resolve) this.confirmModal._resolve(result);
+                },
+                logout() {
+                    localStorage.removeItem('access_token');
+                    localStorage.removeItem('token_type');
+                    localStorage.removeItem('username');
+                    window.location.href = 'index.html';
+                },
+                showToast(message, isError = false) {
+                    this.toast = { show: true, message, isError };
+                    setTimeout(() => { this.toast.show = false; }, 3000);
+                },
+                async apiCall(endpoint, options = {}) {
+                    const response = await fetch(endpoint, {
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${this.token}`
+                        },
+                        ...options
+                    });
+                    if (response.status === 401) {
+                        localStorage.removeItem('access_token');
+                        window.location.href = 'login.html';
+                        return null;
+                    }
+                    return response;
+                },
+                // ── Ollama model picker ───────────────────────────────────
+                async loadOllamaModels() {
+                    this.ollamaModelsLoading = true;
+                    try {
+                        const res = await this.apiCall('/api/ollama-models');
+                        if (res && res.ok) {
+                            const data = await res.json();
+                            this.ollamaModels = data.models || [];
+                        }
+                    } catch (e) { console.error('Ollama models error', e); }
+                    finally { this.ollamaModelsLoading = false; }
+                },
+                async loadLocalModel() {
+                    try {
+                        const res = await this.apiCall('/api/local-model');
+                        if (res && res.ok) {
+                            const data = await res.json();
+                            this.localModel = data.model || '';
+                        }
+                    } catch (e) { console.error('Local model error', e); }
+                },
+                async setLocalModel(model) {
+                    try {
+                        const res = await this.apiCall('/api/local-model', {
+                            method: 'PUT',
+                            body: JSON.stringify({ model })
+                        });
+                        if (res && res.ok) {
+                            this.localModel = model;
+                            this.showToast(`Local model set to ${model}`);
+                        } else {
+                            this.showToast('Failed to update model', true);
+                        }
+                    } catch (e) { this.showToast('Failed to update model', true); }
+                },
+                // ── LLM API Keys ──────────────────────────────────────────
+                async loadLLMKeyStatus() {
+                    try {
+                        const res = await this.apiCall('/api/llm-keys/status');
+                        if (!res || !res.ok) return;
+                        const data = await res.json();
+                        for (const p of this.providers) {
+                            const info = data.providers[p.id];
+                            if (info) { p.isSet = info.is_set; p.hint = info.key_hint || ''; }
+                        }
+                    } catch (e) { console.error('LLM key status error', e); }
+                },
+                async saveKey(p) {
+                    if (!p.inputValue.trim()) { this.showToast('Please enter an API key', true); return; }
+                    try {
+                        const res = await this.apiCall('/api/llm-keys', {
+                            method: 'POST',
+                            body: JSON.stringify({ provider: p.id, api_key: p.inputValue })
+                        });
+                        const data = await res.json();
+                        if (res.ok) {
+                            p.isSet = true; p.hint = data.key_hint; p.showInput = false; p.inputValue = '';
+                            this.showToast(`${p.label} key saved`);
+                        } else { this.showToast(data.detail || 'Failed to save key', true); }
+                    } catch (e) { this.showToast('Failed to save key', true); }
+                },
+                async removeKey(p) {
+                    const ok = await this.openConfirm(`Remove ${p.label} key?`, 'This cannot be undone.', 'Remove', true);
+                    if (!ok) return;
+                    try {
+                        const res = await this.apiCall(`/api/llm-keys/${p.id}`, { method: 'DELETE' });
+                        if (res.ok) {
+                            p.isSet = false; p.hint = '';
+                            // If this was the active provider, it auto-falls back to local
+                            if (this.activeProvider === p.id) this.activeProvider = 'local';
+                            this.showToast(`${p.label} key removed`);
+                        }
+                    } catch (e) { this.showToast('Failed to remove key', true); }
+                },
+                async loadActiveProvider() {
+                    try {
+                        const res = await this.apiCall('/api/llm-provider');
+                        if (!res || !res.ok) return;
+                        const data = await res.json();
+                        this.activeProvider = data.provider || 'local';
+                    } catch (e) { console.error('Active provider error', e); }
+                },
+                async setActiveProvider(providerId) {
+                    try {
+                        const res = await this.apiCall('/api/llm-provider', {
+                            method: 'PUT',
+                            body: JSON.stringify({ provider: providerId })
+                        });
+                        const data = await res.json();
+                        if (res.ok) {
+                            this.activeProvider = providerId;
+                            const label = providerId === 'local' ? 'Local (Ollama)' : this.providers.find(p => p.id === providerId)?.label || providerId;
+                            this.showToast(`Now using ${label}`);
+                        } else { this.showToast(data.detail || 'Failed to switch provider', true); }
+                    } catch (e) { this.showToast('Failed to switch provider', true); }
+                },
+                // ── Gmail ──────────────────────────────────────────────────
+                async loadGmailStatus() {
+                    try {
+                        const res = await this.apiCall('/api/gmail/status');
+                        if (!res || !res.ok) return;
+                        const data = await res.json();
+                        this.gmailConnected = data.connected;
+                        this.gmailEmail = data.email || '';
+                    } catch (e) { console.error('Gmail status error', e); }
+                },
+                async connectGmail() {
+                    try {
+                        const res = await this.apiCall('/api/gmail/auth-url');
+                        if (!res) return;
+                        const data = await res.json();
+                        if (res.ok && data.auth_url) { window.location.href = data.auth_url; }
+                        else { this.showToast(data.detail || 'Gmail not available', true); }
+                    } catch (e) { this.showToast('Failed to start Gmail connection', true); }
+                },
+                async disconnectGmail() {
+                    const ok = await this.openConfirm('Disconnect Gmail?', 'Your Gmail tokens will be removed. You can reconnect at any time.', 'Disconnect', true);
+                    if (!ok) return;
+                    try {
+                        const res = await this.apiCall('/api/gmail/disconnect', { method: 'DELETE' });
+                        if (res.ok) { this.gmailConnected = false; this.gmailEmail = ''; this.watchedSenders = []; this.showToast('Gmail disconnected'); }
+                    } catch (e) { this.showToast('Failed to disconnect', true); }
+                },
+                // ── Watched Senders ───────────────────────────────────────
+                async loadWatchedSenders() {
+                    try {
+                        const res = await this.apiCall('/api/gmail/watched-senders');
+                        if (!res || !res.ok) return;
+                        const data = await res.json();
+                        this.watchedSenders = data.senders || [];
+                    } catch (e) { console.error('Watched senders error', e); }
+                },
+                async addWatchedSender() {
+                    const email = this.newSenderEmail.trim();
+                    if (!email) { this.showToast('Please enter an email address', true); return; }
+                    this.addingSender = true;
+                    try {
+                        const res = await this.apiCall('/api/gmail/watched-senders', {
+                            method: 'POST',
+                            body: JSON.stringify({ email_address: email })
+                        });
+                        const data = await res.json();
+                        if (res.ok) {
+                            this.watchedSenders.push({ email_address: email, display_name: null });
+                            this.newSenderEmail = '';
+                            this.showToast(`Now watching ${email}`);
+                        } else { this.showToast(data.detail || 'Failed to add sender', true); }
+                    } catch (e) { this.showToast('Failed to add sender', true); }
+                    finally { this.addingSender = false; }
+                },
+                async removeWatchedSender(email) {
+                    try {
+                        const res = await this.apiCall(`/api/gmail/watched-senders/${encodeURIComponent(email)}`, { method: 'DELETE' });
+                        if (res.ok) {
+                            this.watchedSenders = this.watchedSenders.filter(s => s.email_address !== email);
+                            this.showToast(`Removed ${email}`);
+                        } else {
+                            const data = await res.json();
+                            this.showToast(data.detail || 'Failed to remove sender', true);
+                        }
+                    } catch (e) { this.showToast('Failed to remove sender', true); }
+                },
+                async clearHistory() {
+                    const ok = await this.openConfirm('Clear Message History?', 'All your message history will be permanently deleted.', 'Clear History', true);
+                    if (!ok) return;
+                    try {
+                        const res = await this.apiCall('/api/messages', { method: 'DELETE' });
+                        if (res.ok) {
+                            const data = await res.json().catch(() => ({}));
+                            const n = data.deleted ?? 0;
+                            this.showToast(`Cleared ${n} message${n === 1 ? '' : 's'}.`);
+                        } else {
+                            const data = await res.json().catch(() => ({}));
+                            this.showToast(data.detail || 'Failed to clear history', true);
+                        }
+                    } catch (e) {
+                        this.showToast('Failed to clear history', true);
+                    }
+                },
+                deleteAccount() {
+                    this.deleteAccountModal = { show: true, typedConfirm: '', password: '' };
+                },
+                async confirmDeleteAccount() {
+                    const { typedConfirm, password } = this.deleteAccountModal;
+                    if (typedConfirm !== 'DELETE' || !password) return;
+                    this.deleteAccountModal.show = false;
+                    try {
+                        const res = await this.apiCall('/api/users/me', {
+                            method: 'DELETE',
+                            body: JSON.stringify({ confirmation: typedConfirm, password }),
+                        });
+                        if (res.ok) {
+                            this.showToast('Account deleted. Goodbye.');
+                            localStorage.removeItem('access_token');
+                            setTimeout(() => { window.location.href = '/'; }, 1200);
+                        } else {
+                            const data = await res.json().catch(() => ({}));
+                            this.showToast(data.detail || 'Failed to delete account', true);
+                        }
+                    } catch (e) {
+                        this.showToast('Failed to delete account', true);
+                    }
+                }
+            }
+        }).mount('#app');
+    </script>
+
+</body>
+</html>

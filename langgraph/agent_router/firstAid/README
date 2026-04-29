@@ -1,0 +1,1 @@
+how to rembed the pdf. cd /home/<USERNAME>/sms_agent/langgraph && uv run python -m agent_router.firstAid.build_vector_store

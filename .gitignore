@@ -1,0 +1,39 @@
+.env
+.envold
+.venv
+__pycache__
+*.faiss
+*.pkl
+*.pdf
+.DS_Store
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.development
+.env.test
+.env.production
+*.egg-info
+dist/
+build/
+*.pyc
+*.pyo
+*.pyd
+*.pyw
+*.pyz
+*.pywz
+*.pyzw
+*.pyzwz
+
+# Runtime model selection (persists across restarts)
+.sms_agent_model
+
+# Database
+offgrid_agent.db
+offgrid_agent_2.db
+offgrid_agent_*.db# Database
+offgrid_agent*.db
+
+
+
+Off-Grid_AI_Agent_Proposal_NO_KB_Aston_Haycock.md
